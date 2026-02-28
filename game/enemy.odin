@@ -20,6 +20,7 @@ SOAEnemy :: #soa ^#soa[dynamic]Enemy
 
 
 REGULAR_DOG_SPEED :: 1.0
+REGULAR_DOG_HEALTH :: 100
 
 
 update_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
@@ -32,19 +33,24 @@ update_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
             case .DogGunner:
             case .DogMortar:
         }
+
+        if enemies[i].entity.health <= 0 {
+            unordered_remove_soa(enemies, i)
+            i -= 1
+        }
     }
 }
 
 draw_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
     for enemy in enemies {
-        position := enemy.entity.position
-        rl.DrawCircle(i32(position.x), i32(position.y), enemy.entity.radius, rl.RED)
+        position := enemy.entity.collider.position
+        rl.DrawCircle(i32(position.x), i32(position.y), enemy.entity.collider.radius, rl.RED)
     }
 }
 
 
 create_regular_dog :: proc(position: rl.Vector2) -> Enemy {
-    return Enemy{.RegularDog, Entity{position, HALF_WIN_SIZE, 20, 5}}
+    return Enemy{.RegularDog, Entity{CollisionCircle{position, 20}, HALF_WIN_SIZE, REGULAR_DOG_HEALTH}}
 }
 
 update_regular_dog :: proc(dog: SOAEnemy) {
