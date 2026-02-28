@@ -4,14 +4,21 @@ import "core:math"
 import "core:math/rand"
 import rl "vendor:raylib"
 
+EnemyType :: enum {
+    Normal,
+    Big
+}
+
 
 Enemy :: struct {
+    type: EnemyType,
     position: rl.Vector2,
     radius: f32,
     health: f32,
     speed: f32,
     slowdown_timer: int
 }
+
 
 ENEMY_SPEED :: 0.5
 ENEMY_SLOWDOWN_TIME :: 15
@@ -27,12 +34,13 @@ update_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
         enemy := &enemies[i]
         
         if enemy.health <= 0 {
+            global_money += ENEMY_MONEY_MAP[enemy.type]
             unordered_remove_soa(enemies, i)
             i -= 1
             continue
         }
 
-        if rl.Vector2Distance(enemy.position, CENTER) > PLAYER_RADIUS * 2 {
+        if rl.Vector2Distance(enemy.position, CENTER) > PLAYER_RADIUS * 2 + 50 {
             speed := enemy.speed if enemy.slowdown_timer == 0 else enemy.speed/2
             move_vector := rl.Vector2Normalize(CENTER - enemy.position) * speed
             enemy.position += move_vector
@@ -47,9 +55,9 @@ update_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
 
 create_enemy :: proc(enemies: ^#soa[dynamic]Enemy) {
     angle := rand.float32_range(0, 2 * math.PI)
-    enemy_pos := rl.Vector2Rotate(rl.Vector2{0, -1}, angle) * (WIN_WIDTH / 2 * 1.41) + CENTER
+    enemy_pos := rl.Vector2Rotate(rl.Vector2{0, -1}, angle) * (FIELD_RECT.width / 2 * 1.41) + CENTER
     enemy_speed := rand.float32_range(ENEMY_SPEED-0.5, ENEMY_SPEED+0.5)
-    enemy := Enemy{enemy_pos, 10, ENEMY_MAX_HEALTH, enemy_speed, 0}
+    enemy := Enemy{.Normal, enemy_pos, 10, ENEMY_MAX_HEALTH, enemy_speed, 0}
     append(enemies, enemy)
 }
 

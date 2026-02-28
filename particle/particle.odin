@@ -14,14 +14,21 @@ Particle :: struct {
     lifetime: int  // Remaining lifetime in frames
 }
 
+EmissionShape :: enum {
+    Rect,
+    Ring
+}
+
 
 System :: struct {
     max_particles: int,
     particles: #soa[dynamic]Particle,
     position: rl.Vector2,
     emission_strength, emission_strength_var, emission_angle, emission_angle_var: f32,
+    emission_shape: EmissionShape,
     spread, force: rl.Vector2,
     drag: f32,
+    angle: f32,
     angular_velocity, angular_velocity_var: f32,
     random_start_angle: bool,
 
@@ -44,12 +51,18 @@ SystemGroup :: struct {
 
 @(private)
 vary_f32 :: proc(base, var: f32) -> f32 {
+    if var == 0 {
+        return base
+    }
     var := math.abs(var)
     return base + rand.float32_range(-var/2, var/2)
 }
 
 @(private)
 vary_int :: proc(base, var: int) -> int {
+    if var == 0 {
+        return base
+    }
     var := math.abs(var)
     return base + rand.int_range(-var/2, var/2)
 }
@@ -61,16 +74,25 @@ add_particle :: proc(system: ^System) {
         return
     }
 
-    position := rl.Vector2{
-        vary_f32(0, system.spread.x),
-        vary_f32(0, system.spread.y),
-    } + system.position
-
     emission_angle := vary_f32(system.emission_angle, system.emission_angle_var)
+    emission_vector :=  rl.Vector2Rotate(rl.Vector2{0, -1}, emission_angle)
     strength := vary_f32(system.emission_strength, system.emission_strength_var)
-    velocity := rl.Vector2Rotate(rl.Vector2{0, -1}, emission_angle) * strength
+    velocity := emission_vector * strength
 
-    angle := rand.float32_range(0, 360) if system.random_start_angle else 0
+    position: rl.Vector2
+    switch system.emission_shape {
+        case .Rect:
+            position = rl.Vector2{
+                vary_f32(0, system.spread.x),
+                vary_f32(0, system.spread.y),
+            } + system.position
+        case .Ring:
+            factor := vary_f32(system.spread.x, system.spread.y)
+            position = system.position + emission_vector * factor
+    }
+
+
+    angle := rand.float32_range(0, 360) if system.random_start_angle else system.angle
     angular_velocity := vary_f32(system.angular_velocity, system.angular_velocity_var)
 
     lifetime := vary_int(system.duration, system.duration_var)
@@ -83,6 +105,7 @@ add_particle :: proc(system: ^System) {
 create_system :: proc() -> System {
     system := System{}
     system.max_particles = -1
+    system.emission_shape = .Rect
     return system
 }
 
@@ -139,8 +162,9 @@ draw_system :: proc(system: ^System) {
             source.width * size, source.height * size
         };
         origin := rl.Vector2{source.width, source.height} / 2 * size
-
+        
         rl.DrawTexturePro(system.particle_sprite, source, dest, origin, particle.angle, color)
+        // rl.DrawCircle(i32(particle.position.x), i32(particle.position.y), 3, rl.RED)
     }
 }
 

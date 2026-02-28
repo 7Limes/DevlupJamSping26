@@ -99,7 +99,8 @@ create_weapon_data :: proc() -> WeaponData {
     cannonballs: #soa[dynamic]CannonBall
 
     return {
-        .Laser, LASER_BASE_AMMO, 0,
+        // .Laser, LASER_BASE_AMMO, 0,
+        .MachineGun, MG_BASE_AMMO, 0,
         bullets, cannonballs,
         MachineGun{MG_BASE_AMMO, MG_BASE_FIRE_INTERVAL, MG_BASE_DAMAGE, false},
         Cannon{CANNON_BASE_AMMO, CANNON_BASE_RADIUS, CANNON_BASE_DAMAGE},
@@ -140,6 +141,7 @@ shoot_machine_gun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: 
     weapon_data.fire_cooldown = machine_gun.fire_interval
     weapon_data.ammo -= 1
     append_soa(&weapon_data.bullets, bullet)
+    create_muzzle_flash_effect(shoot_point, facing_vector)
 }
 
 shoot_cannon :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
@@ -148,6 +150,7 @@ shoot_cannon :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Ve
     weapon_data.fire_cooldown = CANNON_FIRE_INTERVAL
     weapon_data.ammo -= 1
     append_soa(&weapon_data.cannonballs, cannonball)
+    create_muzzle_flash_effect(shoot_point, facing_vector)
 }
 
 shoot_shotgun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
@@ -161,22 +164,46 @@ shoot_shotgun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.V
             shoot_point, velocity, shotgun.damage, 1
         })
     }
+    create_muzzle_flash_effect(shoot_point, facing_vector)
 }
 
 shoot_laser :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
     laser := weapon_data.laser
     weapon_data.fire_cooldown = 0
     weapon_data.ammo -= 1
+    beam_end := shoot_point + facing_vector * 1000
+    for &enemy in global_enemies {
+        dist_sq := point_to_segment_distance_sq(enemy.position, shoot_point, beam_end)
+        combined_radius := (laser.beam_width / 2) + enemy.radius
+        if dist_sq <= combined_radius * combined_radius {
+            enemy.health -= laser.damage
+        }
+    }
 }
 
 
-update_weapons :: proc(weapon_data: ^WeaponData, enemies: ^#soa[dynamic]Enemy) {
+create_muzzle_flash_effect :: proc(shoot_point, facing_vector: rl.Vector2) {
+    effect := particle.create_system()
+    effect.position = shoot_point + facing_vector * 25
+    effect.particle_sprite = TEX_MUZZLE_FLASH_PARTICLE
+    effect.angle = math.atan2_f32(facing_vector.y, facing_vector.x) * math.DEG_PER_RAD + 90
+    effect.start_color = rl.Color{250, 231, 177, 220}
+    effect.end_color = rl.Color{250, 231, 177, 0}
+    effect.duration = 10
+    effect.start_size = 0.15
+    effect.end_size = 0.15
+    particle.populate_system(&effect, 1)
+    particle.add_to_system_group(&global_effects, effect)
+} 
+
+
+update_weapons :: proc(weapon_data: ^WeaponData) {
     if weapon_data.fire_cooldown > 0 {
         weapon_data.fire_cooldown -= 1
     }
 
-    update_bullets(&weapon_data.bullets, enemies)
-    update_cannonballs(&weapon_data.cannonballs, enemies)
+    update_bullets(&weapon_data.bullets)
+    update_cannonballs(&weapon_data.cannonballs)
 }
 
 
@@ -201,7 +228,7 @@ is_outside_screen :: proc(position: rl.Vector2) -> bool {
 }
 
 
-update_bullets :: proc(bullets: ^#soa[dynamic]Bullet, enemies: ^#soa[dynamic]Enemy) {
+update_bullets :: proc(bullets: ^#soa[dynamic]Bullet) {
     for i := 0; i < len(bullets); i+=1 {
         bullet := &bullets[i]
         bullet.position += bullet.velocity
@@ -211,7 +238,7 @@ update_bullets :: proc(bullets: ^#soa[dynamic]Bullet, enemies: ^#soa[dynamic]Ene
             continue
         }
 
-        damaged := try_damage_enemies(bullet.position, BULLET_RADIUS, bullet.damage, true, enemies)
+        damaged := try_damage_enemies(bullet.position, BULLET_RADIUS, bullet.damage, true, &global_enemies)
         if damaged {
             bullet.pierces -= 1
         }
@@ -223,13 +250,13 @@ update_bullets :: proc(bullets: ^#soa[dynamic]Bullet, enemies: ^#soa[dynamic]Ene
 }
 
 
-update_cannonballs :: proc(cannonballs: ^#soa[dynamic]CannonBall, enemies: ^#soa[dynamic]Enemy) {
+update_cannonballs :: proc(cannonballs: ^#soa[dynamic]CannonBall) {
     for i := 0; i < len(cannonballs); i+=1 {
         ball := &cannonballs[i]
         ball.position = rl.Vector2MoveTowards(ball.position, ball.target_position, CB_SPEED)
 
         if rl.Vector2Equals(ball.position, ball.target_position) {
-            try_damage_enemies(ball.position, ball.damage_radius, ball.damage, false, enemies)
+            try_damage_enemies(ball.position, ball.damage_radius, ball.damage, false, &global_enemies)
             
             effect := particle.create_system()
             effect.position = ball.position
