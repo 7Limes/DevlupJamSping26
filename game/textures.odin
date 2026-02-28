@@ -19,6 +19,8 @@ TEX_ICON_MONEY: rl.Texture2D
 
 TEX_LASER_BEAM: rl.Texture2D
 
+TEX_CONVEYOR: rl.Texture2D
+
 WEAPON_TEXTURES: map[WeaponType]rl.Texture2D
 
 
@@ -39,6 +41,8 @@ load_textures :: proc() {
     TEX_ICON_MONEY = rl.LoadTexture("assets/icon/money-icon.png")
 
     TEX_LASER_BEAM = rl.LoadTexture("assets/projectile/laser-beam.png")
+
+    TEX_CONVEYOR = rl.LoadTexture("assets/other/conveyor.png")
 
     WEAPON_TEXTURES[.MachineGun] = TEX_WEAPON_MG
     WEAPON_TEXTURES[.Cannon] = TEX_WEAPON_CANNON
