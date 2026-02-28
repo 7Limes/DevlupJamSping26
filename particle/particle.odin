@@ -3,7 +3,7 @@ package particle
 import "core:math"
 import "core:math/rand"
 import rl "vendor:raylib"
-
+import "core:fmt"
 
 MAX_PARTICLES_PER_FRAME :: 1000
 
@@ -81,11 +81,8 @@ add_particle :: proc(system: ^System) {
 
 
 create_system :: proc() -> System {
-    particles: #soa[dynamic]Particle
     system := System{}
     system.max_particles = -1
-    system.particles = particles
-
     return system
 }
 
@@ -144,7 +141,6 @@ draw_system :: proc(system: ^System) {
         origin := rl.Vector2{source.width, source.height} / 2 * size
 
         rl.DrawTexturePro(system.particle_sprite, source, dest, origin, particle.angle, color)
-        // rl.DrawCircle(i32(particle.position.x), i32(particle.position.y), 3, rl.RED)
     }
 }
 
@@ -154,7 +150,7 @@ create_system_group :: proc(auto_delete_after: f32=-1.0) -> SystemGroup {
     if auto_delete_after == -1.0 {
         return SystemGroup{systems_array, auto_delete_after, nil}
     }
-    delete_timers: [dynamic]f32 = nil
+    delete_timers: [dynamic]f32
     return SystemGroup{systems_array, auto_delete_after, delete_timers}
 }
 
@@ -174,19 +170,22 @@ delete_system_group :: proc(group: ^SystemGroup) {
 
 add_to_system_group :: proc(group: ^SystemGroup, system: System) {
     append(&group.systems, system)
-    append(&group.delete_timers, 0.0)
+    if group.auto_delete_after != -1.0 {
+        append(&group.delete_timers, 0.0)
+    }
 }
 
 
 update_system_group :: proc(group: ^SystemGroup, delta: f32) {
     for i := 0; i < len(group.systems); i+=1 {
-        update_system(&group.systems[i], delta)
+        system := &group.systems[i]
+        update_system(system, delta)
 
         if group.auto_delete_after != -1 {
-            if len(group.systems[i].particles) == 0 {
+            if len(system.particles) == 0 {
                 group.delete_timers[i] += delta
                 if (group.delete_timers[i] >= group.auto_delete_after) {
-                    delete_system(&group.systems[i])
+                    delete_system(system)
                     unordered_remove(&group.systems, i)
                     unordered_remove(&group.delete_timers, i)
                     i -= 1

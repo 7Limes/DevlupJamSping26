@@ -5,6 +5,7 @@ import "core:math/rand"
 import "core:math"
 import "core:strings"
 import rl "vendor:raylib"
+import "../particle"
 
 WIN_WIDTH :: 800
 WIN_HEIGHT :: 800
@@ -18,10 +19,6 @@ SHOOT_SPEED :: 5.0
 PLAYER_COLOR :: rl.Color{50, 50, 220, 255}
 PLAYER_OUTLINE_COLOR :: rl.Color{30, 30, 170, 255}
 
-BULLET_RADIUS :: 5
-BULLET_COLOR :: rl.Color{220, 220, 50, 255}
-BULLET_OUTLINE_COLOR :: rl.Color{120, 120, 20, 255}
-
 HIGH_HEALTH_COLOR :: rl.LIME
 LOW_HEALTH_COLOR :: rl.RED
 
@@ -30,12 +27,15 @@ Player :: struct {
     weapon_data: WeaponData
 }
 
+global_effects: particle.SystemGroup
+
+
 // Update procedures
 update_player :: proc(player: ^Player) {
     player.facing_vector = rl.Vector2Normalize(rl.GetMousePosition() - CENTER)
 
     // Handle firing
-    if rl.IsKeyDown(rl.KeyboardKey.RIGHT_SHIFT) || rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) {
+    if rl.IsKeyDown(.RIGHT_SHIFT) || rl.IsKeyDown(.LEFT_SHIFT) || rl.IsMouseButtonDown(.LEFT) {
         shoot_point := CENTER + player.facing_vector * PLAYER_LINE_LENGTH
         shot := shoot_weapon(&player.weapon_data, shoot_point, player.facing_vector)
     }
@@ -51,12 +51,6 @@ draw_player :: proc(player: ^Player) {
     rl.DrawLineEx(CENTER, line_end, 10, rl.DARKGRAY)
 }
 
-draw_bullets :: proc(bullets: ^#soa[dynamic]Bullet) {
-    for bullet in bullets {
-        rl.DrawCircle(i32(bullet.position.x), i32(bullet.position.y), BULLET_RADIUS+2, BULLET_OUTLINE_COLOR)
-        rl.DrawCircle(i32(bullet.position.x), i32(bullet.position.y), BULLET_RADIUS, BULLET_COLOR)
-    }
-}
 
 draw_formatted_label :: proc(fstring: string, x, y, font_size: i32, color: rl.Color, args: ..any) {
     builder := strings.builder_make()
@@ -67,16 +61,20 @@ draw_formatted_label :: proc(fstring: string, x, y, font_size: i32, color: rl.Co
 }
 
 main :: proc() {
-    
     player := Player{rl.Vector2{0, -1}, create_weapon_data()}
     defer delete_weapon_data(&player.weapon_data)
 
     enemies: #soa[dynamic]Enemy
     defer delete_soa(enemies)
+
+    global_effects = particle.create_system_group(0.5)
+    defer particle.delete_system_group(&global_effects)
     
     rl.SetConfigFlags(rl.ConfigFlags{rl.ConfigFlag.MSAA_4X_HINT})
     rl.InitWindow(WIN_WIDTH, WIN_HEIGHT, "window title")
     rl.SetTargetFPS(60)
+
+    load_textures()
 
 
     next_enemy_timer := 90
@@ -89,15 +87,17 @@ main :: proc() {
         next_enemy_timer -= 1;
         if next_enemy_timer <= 0 {
             create_enemy(&enemies)
-            next_enemy_timer = rand.int_range(50, 120);
+            next_enemy_timer = rand.int_range(0, 1);
         }
 
         rl.BeginDrawing()
             rl.ClearBackground(rl.LIGHTGRAY)
             
             draw_player(&player)
-            draw_bullets(&player.weapon_data.bullets)
+            draw_weapons(&player.weapon_data)
             draw_enemies(&enemies)
+            particle.update_system_group(&global_effects, rl.GetFrameTime())
+            particle.draw_system_group(&global_effects)
 
             rl.DrawRectangle(0, 0, 150, 60, rl.Color{40, 40, 40, 170})
             draw_formatted_label("FPS: %d", 0, 0, 20, rl.WHITE, rl.GetFPS())
@@ -106,4 +106,6 @@ main :: proc() {
         
         rl.EndDrawing()
     }
+
+    rl.CloseWindow()
 }
