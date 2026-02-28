@@ -10,16 +10,16 @@ MG_BASE_FIRE_INTERVAL :: 10
 MG_BASE_DAMAGE :: 1
 MG_BULLET_SPEED :: 5.0
 
-CANNON_BASE_AMMO :: 10
+CANNON_BASE_SPEED :: 4.0
 CANNON_BASE_RADIUS :: 60
-CANNON_BASE_DAMAGE :: 10
+CANNON_BASE_DAMAGE :: 5
+CANNON_AMMO :: 10
 CANNON_FIRE_INTERVAL :: 50
-CB_SPEED :: 4.0
 CB_VISUAL_RADIUS :: 10
 
 SHOTGUN_BASE_AMMO :: 30
-SHOTGUN_BASE_FIRE_INTERVAL :: 20
 SHOTGUN_BASE_DAMAGE :: 3
+SHOTGUN_FIRE_INTERVAL :: 20
 SHOTGUN_SPREAD :: 0.5
 SHOTGUN_BULLET_SPEED :: 7.5
 
@@ -40,6 +40,7 @@ Bullet :: struct {
 
 CannonBall :: struct {
     position, target_position: rl.Vector2,
+    speed: f32,
     damage: f32,
     damage_radius: f32
 }
@@ -53,14 +54,13 @@ MachineGun :: struct {
 }
 
 Cannon :: struct {
-    max_ammo: int,
+    speed: f32,
     radius: f32,
     damage: f32
 }
 
 Shotgun :: struct {
     max_ammo: int,
-    fire_interval: int,
     damage: f32,
     barrels: int
 }
@@ -103,8 +103,8 @@ create_weapon_data :: proc() -> WeaponData {
         .MachineGun, MG_BASE_AMMO, 0,
         bullets, cannonballs,
         MachineGun{MG_BASE_AMMO, MG_BASE_FIRE_INTERVAL, MG_BASE_DAMAGE, false},
-        Cannon{CANNON_BASE_AMMO, CANNON_BASE_RADIUS, CANNON_BASE_DAMAGE},
-        Shotgun{SHOTGUN_BASE_AMMO, SHOTGUN_BASE_FIRE_INTERVAL, SHOTGUN_BASE_DAMAGE, 3},
+        Cannon{CANNON_BASE_SPEED, CANNON_BASE_RADIUS, CANNON_BASE_DAMAGE},
+        Shotgun{SHOTGUN_BASE_AMMO, SHOTGUN_BASE_DAMAGE, 3},
         Laser{LASER_BASE_AMMO, LASER_BASE_DAMAGE, LASER_BASE_BEAM_WIDTH}
     }
 }
@@ -146,7 +146,7 @@ shoot_machine_gun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: 
 
 shoot_cannon :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
     cannon := &weapon_data.cannon
-    cannonball := CannonBall{shoot_point, rl.GetMousePosition(), cannon.damage, cannon.radius}
+    cannonball := CannonBall{shoot_point, rl.GetMousePosition(), cannon.speed, cannon.damage, cannon.radius}
     weapon_data.fire_cooldown = CANNON_FIRE_INTERVAL
     weapon_data.ammo -= 1
     append_soa(&weapon_data.cannonballs, cannonball)
@@ -155,7 +155,7 @@ shoot_cannon :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Ve
 
 shoot_shotgun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
     shotgun := weapon_data.shotgun
-    weapon_data.fire_cooldown = shotgun.fire_interval
+    weapon_data.fire_cooldown = SHOTGUN_FIRE_INTERVAL
     weapon_data.ammo -= 1
     for i := 0; i < shotgun.barrels; i+=1 {
         angle := rl.Lerp(-SHOTGUN_SPREAD, SHOTGUN_SPREAD, f32(i) / f32(shotgun.barrels-1))
@@ -213,7 +213,7 @@ change_weapon :: proc(weapon_data: ^WeaponData, type: WeaponType) {
         case .MachineGun:
             weapon_data.ammo = weapon_data.machine_gun.max_ammo
         case .Cannon:
-            weapon_data.ammo = weapon_data.cannon.max_ammo
+            weapon_data.ammo = CANNON_AMMO
         case .Shotgun:
             weapon_data.ammo = weapon_data.shotgun.max_ammo
         case .Laser:
@@ -253,7 +253,7 @@ update_bullets :: proc(bullets: ^#soa[dynamic]Bullet) {
 update_cannonballs :: proc(cannonballs: ^#soa[dynamic]CannonBall) {
     for i := 0; i < len(cannonballs); i+=1 {
         ball := &cannonballs[i]
-        ball.position = rl.Vector2MoveTowards(ball.position, ball.target_position, CB_SPEED)
+        ball.position = rl.Vector2MoveTowards(ball.position, ball.target_position, ball.speed)
 
         if rl.Vector2Equals(ball.position, ball.target_position) {
             try_damage_enemies(ball.position, ball.damage_radius, ball.damage, false, &global_enemies)
@@ -261,7 +261,7 @@ update_cannonballs :: proc(cannonballs: ^#soa[dynamic]CannonBall) {
             effect := particle.create_system()
             effect.position = ball.position
             effect.particle_sprite = TEX_FIRE_PARTICLE
-            effect.emission_strength = 7
+            effect.emission_strength = 0.1 * ball.damage_radius
             effect.emission_strength_var = 5
             effect.emission_angle_var = 2 * math.PI
             effect.drag = 0.7
@@ -273,7 +273,7 @@ update_cannonballs :: proc(cannonballs: ^#soa[dynamic]CannonBall) {
             effect.angular_velocity_var = 3
             effect.start_size = 0.3
             effect.end_size = 0.0
-            particle.populate_system(&effect, 20)
+            particle.populate_system(&effect, int(0.2 * ball.damage_radius))
 
             flare_effect := particle.create_system()
             flare_effect.position = ball.position

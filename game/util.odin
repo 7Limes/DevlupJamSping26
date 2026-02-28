@@ -3,6 +3,7 @@ package game
 import rl "vendor:raylib"
 import "core:fmt"
 import "core:strings"
+import "base:intrinsics"
 
 vec2_inverse_lerp :: proc(value, start, end: rl.Vector2) -> f32 {
     ab := end - start
@@ -54,4 +55,22 @@ format_with_commas :: proc(n: int, allocator := context.allocator) -> string {
         return strings.concatenate({"-", result}, allocator)
     }
     return result
+}
+
+
+format_as_cstring :: proc(fstring: string, args: ..any) -> cstring {
+    builder := strings.builder_make()
+    defer strings.builder_destroy(&builder)
+    formatted_string := fmt.sbprintf(&builder, fstring, ..args)
+    return strings.clone_to_cstring(formatted_string)
+}
+
+
+indexof :: proc(arr: []$T, value: T) -> (int, bool) where intrinsics.type_is_comparable(T) {
+    for v, i in arr {
+        if v == value {
+            return i, true
+        }
+    }
+    return 0, false
 }

@@ -41,7 +41,7 @@ Player :: struct {
 global_effects: particle.SystemGroup
 global_enemies: #soa[dynamic]Enemy
 
-global_money: int
+global_money: int = 10000
 
 
 is_shooting :: proc() -> bool {
@@ -110,11 +110,8 @@ create_player_shield :: proc() {
 
 
 draw_formatted_label :: proc(fstring: string, x, y, font_size: i32, color: rl.Color, args: ..any) {
-    builder := strings.builder_make()
-    formatted_string := fmt.sbprintf(&builder, fstring, ..args)
-    formatted_cstring := strings.clone_to_cstring(formatted_string)
-    rl.DrawText(formatted_cstring, x, y, font_size, color)
-    strings.builder_destroy(&builder)
+    str := format_as_cstring(fstring, ..args)
+    rl.DrawText(str, x, y, font_size, color)
 }
 
 main :: proc() {
@@ -170,7 +167,7 @@ main :: proc() {
             particle.draw_system_group(&global_effects)
 
             show_weapon_conveyor_ui(&player.weapon_data)
-            show_weapon_upgrade_ui()
+            show_weapon_upgrade_ui(&player.weapon_data)
 
             draw_ammo_label(&player)
             draw_money_label()
