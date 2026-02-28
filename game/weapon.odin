@@ -23,6 +23,9 @@ SHOTGUN_BASE_DAMAGE :: 3
 SHOTGUN_SPREAD :: 0.5
 SHOTGUN_BULLET_SPEED :: 7.5
 
+LASER_BASE_AMMO :: 300
+LASER_BASE_DAMAGE :: 0.25
+LASER_BASE_BEAM_WIDTH :: 50
 
 BULLET_RADIUS :: 5
 BULLET_COLOR :: rl.Color{220, 220, 50, 255}
@@ -63,7 +66,9 @@ Shotgun :: struct {
 }
 
 Laser :: struct {
-
+    max_ammo: int,
+    damage: f32,
+    beam_width: f32
 }
 
 Sniper :: struct {
@@ -86,6 +91,7 @@ WeaponData :: struct {
     machine_gun: MachineGun,
     cannon: Cannon,
     shotgun: Shotgun,
+    laser: Laser
 }
 
 create_weapon_data :: proc() -> WeaponData {
@@ -93,13 +99,12 @@ create_weapon_data :: proc() -> WeaponData {
     cannonballs: #soa[dynamic]CannonBall
 
     return {
-        // .MachineGun, MG_BASE_AMMO, 0,
-        // .Shotgun, SHOTGUN_BASE_AMMO, 0,
-        .Cannon, CANNON_BASE_AMMO, 0,
+        .Laser, LASER_BASE_AMMO, 0,
         bullets, cannonballs,
         MachineGun{MG_BASE_AMMO, MG_BASE_FIRE_INTERVAL, MG_BASE_DAMAGE, false},
         Cannon{CANNON_BASE_AMMO, CANNON_BASE_RADIUS, CANNON_BASE_DAMAGE},
         Shotgun{SHOTGUN_BASE_AMMO, SHOTGUN_BASE_FIRE_INTERVAL, SHOTGUN_BASE_DAMAGE, 3},
+        Laser{LASER_BASE_AMMO, LASER_BASE_DAMAGE, LASER_BASE_BEAM_WIDTH}
     }
 }
 
@@ -122,6 +127,7 @@ shoot_weapon :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Ve
         case .Shotgun:
             shoot_shotgun(weapon_data, shoot_point, facing_vector)
         case .Laser:
+            shoot_laser(weapon_data, shoot_point, facing_vector)
     }
 
     return true
@@ -157,6 +163,12 @@ shoot_shotgun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.V
     }
 }
 
+shoot_laser :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
+    laser := weapon_data.laser
+    weapon_data.fire_cooldown = 0
+    weapon_data.ammo -= 1
+}
+
 
 update_weapons :: proc(weapon_data: ^WeaponData, enemies: ^#soa[dynamic]Enemy) {
     if weapon_data.fire_cooldown > 0 {
@@ -165,6 +177,21 @@ update_weapons :: proc(weapon_data: ^WeaponData, enemies: ^#soa[dynamic]Enemy) {
 
     update_bullets(&weapon_data.bullets, enemies)
     update_cannonballs(&weapon_data.cannonballs, enemies)
+}
+
+
+change_weapon :: proc(weapon_data: ^WeaponData, type: WeaponType) {
+    weapon_data.current = type
+    switch type {
+        case .MachineGun:
+            weapon_data.ammo = weapon_data.machine_gun.max_ammo
+        case .Cannon:
+            weapon_data.ammo = weapon_data.cannon.max_ammo
+        case .Shotgun:
+            weapon_data.ammo = weapon_data.shotgun.max_ammo
+        case .Laser:
+            weapon_data.ammo = weapon_data.laser.max_ammo
+    }
 }
 
 
@@ -262,9 +289,12 @@ try_damage_enemies :: proc(position: rl.Vector2, radius, damage: f32, single_ene
     return hit_enemy
 }
 
-draw_weapons :: proc(weapon_data: ^WeaponData) {
-    draw_bullets(&weapon_data.bullets)
-    draw_cannonballs(&weapon_data.cannonballs)
+draw_weapons :: proc(player: ^Player) {
+    draw_bullets(&player.weapon_data.bullets)
+    draw_cannonballs(&player.weapon_data.cannonballs)
+    if is_shooting() && player.weapon_data.current == .Laser && player.weapon_data.ammo > 0 {
+        draw_laser(player)
+    }
 }
 
 draw_bullets :: proc(bullets: ^#soa[dynamic]Bullet) {
@@ -279,4 +309,13 @@ draw_cannonballs :: proc(cannonballs: ^#soa[dynamic]CannonBall) {
         rl.DrawCircle(i32(ball.position.x), i32(ball.position.y), CB_VISUAL_RADIUS+2, BULLET_OUTLINE_COLOR)
         rl.DrawCircle(i32(ball.position.x), i32(ball.position.y), CB_VISUAL_RADIUS, BULLET_COLOR)
     }
+}
+
+draw_laser :: proc(player: ^Player) {
+    beam_width := player.weapon_data.laser.beam_width
+    facing_angle := math.atan2_f32(player.facing_vector.y, player.facing_vector.x) * math.DEG_PER_RAD
+    source := rl.Rectangle{0, 0, f32(TEX_LASER_BEAM.width), f32(TEX_LASER_BEAM.height)};
+    dest := rl.Rectangle{CENTER.x, CENTER.y, source.width*40, beam_width}
+    origin := rl.Vector2{source.width-150, source.height+beam_width/2-7} / 2 * 1.5
+    rl.DrawTexturePro(TEX_LASER_BEAM, source, dest, origin, facing_angle, rl.WHITE)
 }
