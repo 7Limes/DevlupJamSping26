@@ -6,6 +6,7 @@
   - bomb gun
   - laser
   - shotgun
+  - sniper
   - others???
 - Each weapon only has a limited amount of ammo
   - Forces the player to switch weapons
