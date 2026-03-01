@@ -61,6 +61,8 @@ global_dog_sprite := TEX_DOG_SUSPICIOUS
 
 global_state := GameState.Title
 
+global_saved_framebuffer: rl.Texture2D
+
 global_debug_enabled := false
 global_listening_for_cheat := false
 
@@ -214,7 +216,10 @@ title_update :: proc(player: ^Player) {
 
 game_update :: proc(player: ^Player) {
     if global_health <= 0 {
-        global_state = .Title
+        screen := rl.LoadImageFromScreen()
+        global_saved_framebuffer := rl.LoadTextureFromImage(screen)
+        rl.UnloadImage(screen)
+        global_state = .Dead
     }
 
     delta := rl.GetFrameTime()
@@ -261,6 +266,19 @@ game_update :: proc(player: ^Player) {
         cheats_tick(&player.weapon_data)
 
         
+    rl.EndDrawing()
+}
+
+dead_update :: proc() {
+    rl.BeginDrawing()
+    
+    rl.DrawTexture(global_saved_framebuffer, 0, 0, rl.WHITE)
+    rl.GuiPanel({400, 300, 400, 200}, "Game Over")
+    if rl.GuiButton({500, 350, 200, 100}, "Back to Title") {
+        rl.UnloadTexture(global_saved_framebuffer)
+        global_state = .Title
+    }
+
     rl.EndDrawing()
 }
 
@@ -336,6 +354,7 @@ main :: proc() {
             case .Game:
                 game_update(&player)
             case .Dead:
+                dead_update()
 
         }
 
