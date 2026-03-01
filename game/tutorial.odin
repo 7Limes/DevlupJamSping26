@@ -17,6 +17,7 @@ show_tutorial :: proc() {
     if tutorial_index >= len(TUTORIAL_DATA) {
         return
     }
+    global_wave_data.wave_timer = 0 // Avoid progressing waves until tutorial is over
 
     data := TUTORIAL_DATA[tutorial_index]
     pressed_x := rl.GuiWindowBox(data.rect, "Tutorial")

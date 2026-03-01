@@ -6,7 +6,8 @@ import rl "vendor:raylib"
 
 EnemyType :: enum {
     Normal,
-    Big
+    Big,
+    Huge
 }
 
 
@@ -23,7 +24,7 @@ Enemy :: struct {
 
 
 NORMAL_ENEMY_RADIUS :: 10
-NORMAL_ENEMY_SPEED :: 0.5
+NORMAL_ENEMY_SPEED :: 0.6
 NORMAL_ENEMY_HEALTH :: 5
 NORMAL_ENEMY_DAMAGE :: 0.01
 
@@ -32,10 +33,13 @@ BIG_ENEMY_SPEED :: 0.3
 BIG_ENEMY_HEALTH :: 10
 BIG_ENEMY_DAMAGE :: 0.02
 
+HUGE_ENEMY_RADIUS :: 50
+HUGE_ENEMY_SPEED :: 0.2
+HUGE_ENEMY_HEALTH :: 30
+HUGE_ENEMY_DAMAGE :: 0.1
+
 ENEMY_SLOWDOWN_TIME :: 15
 
-ENEMY_COLOR :: rl.Color{220, 50, 50, 255}
-ENEMY_OUTLINE_COLOR :: rl.Color{170, 30, 30, 255}
 ENEMY_HEALTHBAR_WIDTH :: 50
 ENEMY_HEALTHBAR_HEIGHT :: 10
 
@@ -85,18 +89,26 @@ create_big_enemy :: proc(enemies: ^#soa[dynamic]Enemy) {
     append(enemies, enemy)
 }
 
+create_huge_enemy :: proc(enemies: ^#soa[dynamic]Enemy) {
+    enemy_pos := get_enemy_spawn_point()
+    enemy := Enemy{.Huge, enemy_pos, HUGE_ENEMY_RADIUS, HUGE_ENEMY_HEALTH, HUGE_ENEMY_HEALTH, HUGE_ENEMY_SPEED, HUGE_ENEMY_DAMAGE, 0, TEX_HUGE_ENEMY}
+    append(enemies, enemy)
+}
+
 
 draw_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
     for enemy in enemies {
         rl.DrawTextureEx(enemy.sprite, enemy.position-{enemy.radius, enemy.radius}, 0, enemy.radius*2/f32(enemy.sprite.width), rl.WHITE)
 
         // Draw healthbar
-        healthbar_pos := rl.Vector2{enemy.position.x-ENEMY_HEALTHBAR_WIDTH/2, enemy.position.y-enemy.radius-15}
-        health_t := f32(enemy.health) / enemy.max_health
-        filled_health_width := health_t * ENEMY_HEALTHBAR_WIDTH
-        filled_health_color := rl.ColorLerp(LOW_HEALTH_COLOR, HIGH_HEALTH_COLOR, health_t)
-        rl.DrawRectangle(i32(healthbar_pos.x), i32(healthbar_pos.y), ENEMY_HEALTHBAR_WIDTH, ENEMY_HEALTHBAR_HEIGHT, rl.Color{50, 50, 50, 128})
-        rl.DrawRectangle(i32(healthbar_pos.x), i32(healthbar_pos.y), i32(filled_health_width), ENEMY_HEALTHBAR_HEIGHT, filled_health_color)
-        rl.DrawRectangleLinesEx(rl.Rectangle{healthbar_pos.x-1, healthbar_pos.y-1, ENEMY_HEALTHBAR_WIDTH+2, ENEMY_HEALTHBAR_HEIGHT+2}, 2, rl.BLACK)
+        if enemy.health < enemy.max_health {
+            healthbar_pos := rl.Vector2{enemy.position.x-ENEMY_HEALTHBAR_WIDTH/2, enemy.position.y-enemy.radius-15}
+            health_t := f32(enemy.health) / enemy.max_health
+            filled_health_width := health_t * ENEMY_HEALTHBAR_WIDTH
+            filled_health_color := rl.ColorLerp(LOW_HEALTH_COLOR, HIGH_HEALTH_COLOR, health_t)
+            rl.DrawRectangle(i32(healthbar_pos.x), i32(healthbar_pos.y), ENEMY_HEALTHBAR_WIDTH, ENEMY_HEALTHBAR_HEIGHT, rl.Color{50, 50, 50, 128})
+            rl.DrawRectangle(i32(healthbar_pos.x), i32(healthbar_pos.y), i32(filled_health_width), ENEMY_HEALTHBAR_HEIGHT, filled_health_color)
+            rl.DrawRectangleLinesEx(rl.Rectangle{healthbar_pos.x-1, healthbar_pos.y-1, ENEMY_HEALTHBAR_WIDTH+2, ENEMY_HEALTHBAR_HEIGHT+2}, 2, rl.BLACK)
+        }
     }
 }

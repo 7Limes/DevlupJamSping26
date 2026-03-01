@@ -7,3 +7,5 @@
 - Rifle shoot: https://freesound.org/people/EvanBoyerman/sounds/393671/
 - Shotgun shot: https://freesound.org/people/hyperix6/sounds/660299/
 - Shotgun pump: https://freesound.org/people/awrmacd/sounds/387190/
+- UI Sounds: https://kenney.nl/assets/interface-sounds
+- Buy Sound: - https://www.myinstants.com/en/instant/cha-ching-money-75435/

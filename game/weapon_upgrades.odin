@@ -79,9 +79,15 @@ show_upgrade_option :: proc(y_pos: f32, name: cstring, value: ^$T, upgrades: []T
     rl.GuiSetStyle(.DEFAULT, 16, saved_text_size)
     
     button_pressed := rl.GuiButton({1010, y_pos+70, 80, 30}, "Upgrade")
-    if button_pressed && next_level_exists && global_money >= costs[level] {
-        global_money -= costs[level]
-        value^ = upgrades[level+1]
+    if button_pressed {
+        if next_level_exists && global_money >= costs[level] {
+            global_money -= costs[level]
+            value^ = upgrades[level+1]
+            rl.PlaySound(SOUND_UPGRADE)
+        }
+        else {
+            rl.PlaySound(SOUND_ERROR)
+        }
     }
 }
 

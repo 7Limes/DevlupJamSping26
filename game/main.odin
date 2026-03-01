@@ -55,14 +55,18 @@ global_enemies: #soa[dynamic]Enemy
 global_money: int = 10000
 global_health: f32 = PLAYER_MAX_HEALTH
 
+global_wave_data: WaveData
+
 global_state := GameState.Title
 
-next_enemy_timer := 90
+global_debug_enabled := false
+global_listening_for_cheat := false
 
 
 is_shooting :: proc() -> bool {
     return (rl.IsKeyDown(.RIGHT_SHIFT) || rl.IsKeyDown(.LEFT_SHIFT) || rl.IsMouseButtonDown(.LEFT)) &&
-            rl.CheckCollisionPointRec(rl.GetMousePosition(), FIELD_RECT)
+            rl.CheckCollisionPointRec(rl.GetMousePosition(), FIELD_RECT) &&
+            (tutorial_index >= len(TUTORIAL_DATA))
 }
 
 
@@ -144,6 +148,35 @@ create_player_shield :: proc() {
     particle.add_to_system_group(&global_effects, effect2)
 }
 
+toggle_debug :: proc() {
+    if rl.IsKeyPressed(.GRAVE) {
+        global_debug_enabled = !global_debug_enabled
+    }
+}
+
+cheats_tick :: proc() {
+    if !global_debug_enabled {
+        return
+    }
+
+    if rl.IsKeyPressed(.SLASH) {
+        global_listening_for_cheat = !global_listening_for_cheat
+    }
+
+    if global_listening_for_cheat {
+        rl.DrawText("listening", 130, 705, 16, rl.BLACK)
+        if rl.IsKeyPressed(.G) {
+            global_money += 10000
+            global_listening_for_cheat = false
+        }
+        else if rl.IsKeyPressed(.N) {
+            next_wave(&global_wave_data)
+            global_listening_for_cheat = false
+        }
+    }
+
+}
+
 
 draw_formatted_label :: proc(fstring: string, x, y, font_size: i32, color: rl.Color, args: ..any) {
     str := format_as_cstring(fstring, ..args)
@@ -168,6 +201,8 @@ game_update :: proc(player: ^Player) {
         global_state = .Title
     }
 
+    delta := rl.GetFrameTime()
+
     update_player(player)
     update_weapons(&player.weapon_data)
     if !is_shooting() {
@@ -175,18 +210,9 @@ game_update :: proc(player: ^Player) {
     }
     update_enemies(&global_enemies)
 
-    update_weapon_conveyor()
+    wave_update(&global_wave_data, delta)
 
-    next_enemy_timer -= 1;
-    if next_enemy_timer <= 0 {
-        if rand.int_range(0, 2) == 0 {
-            create_normal_enemy(&global_enemies)
-        }
-        else {
-            create_big_enemy(&global_enemies)
-        }
-        next_enemy_timer = rand.int_range(50, 120);
-    }
+    update_weapon_conveyor()
 
     rl.BeginDrawing()
         rl.DrawTextureEx(TEX_BACKGROUND, {200, 0}, 0, 2.0, rl.WHITE)
@@ -195,22 +221,29 @@ game_update :: proc(player: ^Player) {
         draw_enemies(&global_enemies)
         draw_weapons(player)
 
-        particle.update_system_group(&global_effects, rl.GetFrameTime())
+        particle.update_system_group(&global_effects, delta)
         particle.draw_system_group(&global_effects)
-
+        
+        draw_animated_wave_label(&global_wave_data)
         show_weapon_conveyor_ui(&player.weapon_data)
         show_weapon_upgrade_ui(&player.weapon_data)
+        draw_wave_label(&global_wave_data)
 
         draw_ammo_label(player)
         draw_health_label()
         draw_money_label()
+        
 
         show_tutorial()
 
-        rl.GuiPanel({0, 700, 200, 100}, "debug")
-        draw_formatted_label("FPS: %d", 0, 730, 20, rl.BLACK, rl.GetFPS())
-        draw_formatted_label("Bullets: %d", 0, 750, 20, rl.BLACK, len(&player.weapon_data.bullets))
-        draw_formatted_label("Enemies: %d", 0, 770, 20, rl.BLACK, len(global_enemies))
+        if global_debug_enabled {
+            rl.GuiPanel({0, 700, 200, 100}, "debug")
+            draw_formatted_label("FPS: %d", 0, 730, 20, rl.BLACK, rl.GetFPS())
+            draw_formatted_label("Bullets: %d", 0, 750, 20, rl.BLACK, len(&player.weapon_data.bullets))
+            draw_formatted_label("Enemies: %d", 0, 770, 20, rl.BLACK, len(global_enemies))
+        }
+        cheats_tick()
+
         
     rl.EndDrawing()
 }
@@ -222,9 +255,9 @@ init_game :: proc(player: ^Player) {
     clear_soa_dynamic_array(&global_enemies)
     clear_dynamic_array(&conveyor_contents)
 
-    global_money = 10000
+    global_money = 0
     global_health = PLAYER_MAX_HEALTH
-    
+    init_wave_data(&global_wave_data)
 
     create_player_shield()
     change_weapon(&player.weapon_data, .MachineGun)
@@ -248,14 +281,16 @@ main :: proc() {
     defer particle.delete_system_group(&global_effects)
     
     rl.SetConfigFlags(rl.ConfigFlags{rl.ConfigFlag.MSAA_4X_HINT})
-    rl.InitWindow(WIN_WIDTH, WIN_HEIGHT, "window title")
+    rl.InitWindow(WIN_WIDTH, WIN_HEIGHT, "C.H.A.D")
     rl.SetTargetFPS(60)
+    rl.SetExitKey(.KEY_NULL)
     rl.GuiLoadStyle("assets/style/style_candy.rgs")
 
     load_textures()
     load_audio()
 
     for !rl.WindowShouldClose() {
+        toggle_debug()
         switch global_state {
             case .Title:
                 title_update(&player)

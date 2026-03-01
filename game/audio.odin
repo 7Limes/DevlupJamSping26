@@ -12,6 +12,10 @@ SOUND_RANDOM_EXPLOSION: [4]rl.Sound
 SOUND_ASSAULT_SHOT: rl.Sound
 SOUND_SHOTGUN_SHOT: rl.Sound
 
+SOUND_ERROR: rl.Sound
+SOUND_UPGRADE: rl.Sound
+SOUND_BUY: rl.Sound
+
 SOUND_LASER_LOOP: rl.Music
 
 SHOTGUN_SOUND_POOL: AliasPool
@@ -49,6 +53,10 @@ load_audio :: proc() {
     SOUND_RANDOM_EXPLOSION[3] = rl.LoadSound("audio/explosion/explosion4.ogg")
 
     SOUND_ASSAULT_SHOT = rl.LoadSound("audio/shot/assault-shot-last.ogg")
+
+    SOUND_ERROR = rl.LoadSound("audio/ui/error.ogg")
+    SOUND_UPGRADE = rl.LoadSound("audio/ui/upgrade.ogg")
+    SOUND_BUY = rl.LoadSound("audio/ui/buy.ogg")
 
     SOUND_SHOTGUN_SHOT = rl.LoadSound("audio/shot/shotgun-shot.ogg")
     SHOTGUN_SOUND_POOL = create_alias_pool(&SOUND_SHOTGUN_SHOT)

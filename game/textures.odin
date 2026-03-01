@@ -24,6 +24,7 @@ TEX_LASER_BEAM: rl.Texture2D
 
 TEX_NORMAL_ENEMY: rl.Texture2D
 TEX_BIG_ENEMY: rl.Texture2D
+TEX_HUGE_ENEMY: rl.Texture2D
 
 TEX_CONVEYOR: rl.Texture2D
 
@@ -52,6 +53,7 @@ load_textures :: proc() {
 
     TEX_NORMAL_ENEMY = rl.LoadTexture("assets/enemy/normal-enemy.png")
     TEX_BIG_ENEMY = rl.LoadTexture("assets/enemy/big-enemy.png")
+    TEX_HUGE_ENEMY = rl.LoadTexture("assets/enemy/huge-enemy.png")
 
     TEX_LASER_BEAM = rl.LoadTexture("assets/projectile/laser-beam.png")
 

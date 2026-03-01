@@ -102,6 +102,10 @@ show_weapon_conveyor_ui :: proc(weapon_data: ^WeaponData) {
         if global_money >= WEAPON_PRICE && len(conveyor_contents) < max_conveyor_boxes {
             global_money -= WEAPON_PRICE
             add_weapon_box()
+            rl.PlaySound(SOUND_BUY)
+        }
+        else {
+            rl.PlaySound(SOUND_ERROR)
         }
     }
 
