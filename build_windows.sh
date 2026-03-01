@@ -3,15 +3,13 @@
 RAYLIB_LIB="./lib"
 MINGW_CC="x86_64-w64-mingw32-gcc"
 
-rm build/windows/*.o
-
 odin build game \
   -target:windows_amd64 \
   -build-mode:obj \
   -use-single-module \
-  -out:build/windows/game.o
+  -out:game-win.o
 
-${MINGW_CC} build/windows/game.o lib/raygui-windows.o \
+${MINGW_CC} game-win.o lib/raygui-windows.o \
   -L${RAYLIB_LIB} \
   -lraylib \
   -lrayguidll \

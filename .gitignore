@@ -1,3 +1,6 @@
 Particles
 build
 lib
+*.o
+*.exe
+*.x86_64
