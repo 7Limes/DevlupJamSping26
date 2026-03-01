@@ -86,7 +86,7 @@ show_upgrade_option :: proc(y_pos: f32, name: cstring, value: ^$T, upgrades: []T
 }
 
 show_machine_gun_ui :: proc(machine_gun: ^MachineGun) {
-    show_upgrade_option(100, "Ammo:", &machine_gun.max_ammo, MG_AMMO_UPGRADES, MG_AMMO_COSTS)
+    show_upgrade_option(100, "Max Ammo:", &machine_gun.max_ammo, MG_AMMO_UPGRADES, MG_AMMO_COSTS)
     show_upgrade_option(200, "Damage:", &machine_gun.damage, MG_DAMAGE_UPGRADES, MG_DAMAGE_COSTS)
     show_upgrade_option(300, "Fire Rate:", &machine_gun.fire_interval, MG_FIRE_UPGRADES, MG_FIRE_COSTS)
 }
@@ -98,13 +98,13 @@ show_cannon_ui :: proc(cannon: ^Cannon) {
 }
 
 show_shotgun_ui :: proc(shotgun: ^Shotgun) {
-    show_upgrade_option(100, "Ammo:", &shotgun.max_ammo, SHOTGUN_AMMO_UPGRADES, SHOTGUN_AMMO_COSTS)
+    show_upgrade_option(100, "Max Ammo:", &shotgun.max_ammo, SHOTGUN_AMMO_UPGRADES, SHOTGUN_AMMO_COSTS)
     show_upgrade_option(200, "Damage:", &shotgun.damage, SHOTGUN_DAMAGE_UPGRADES, SHOTGUN_DAMAGE_COSTS)
     show_upgrade_option(300, "Barrels:", &shotgun.barrels, SHOTGUN_BARREL_UPGRADES, SHOTGUN_BARREL_COSTS)
 }
 
 show_laser_ui :: proc(laser: ^Laser) {
-    show_upgrade_option(100, "Ammo:", &laser.max_ammo, LASER_AMMO_UPGRADES, LASER_AMMO_COSTS)
+    show_upgrade_option(100, "Max Ammo:", &laser.max_ammo, LASER_AMMO_UPGRADES, LASER_AMMO_COSTS)
     show_upgrade_option(200, "Damage:", &laser.damage, LASER_DAMAGE_UPGRADES, LASER_DAMAGE_COSTS)
     show_upgrade_option(300, "Width:", &laser.beam_width, LASER_WIDTH_UPGRADES, LASER_WIDTH_COSTS)
 }

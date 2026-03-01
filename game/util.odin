@@ -2,6 +2,7 @@ package game
 
 import rl "vendor:raylib"
 import "core:fmt"
+import "core:math/rand"
 import "core:strings"
 import "base:intrinsics"
 
@@ -73,4 +74,10 @@ indexof :: proc(arr: []$T, value: T) -> (int, bool) where intrinsics.type_is_com
         }
     }
     return 0, false
+}
+
+
+play_random_sound :: proc(sounds: []rl.Sound) {
+    sound := &sounds[rand.int_max(len(sounds))]
+    rl.PlaySound(sound^)
 }

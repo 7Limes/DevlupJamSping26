@@ -223,6 +223,16 @@ update_system_group :: proc(group: ^SystemGroup, delta: f32) {
 }
 
 
+clear_system_group :: proc(group: ^SystemGroup) {
+    for &system in group.systems {
+        delete_system(&system)
+    }
+    
+    clear_dynamic_array(&group.systems)
+    clear_dynamic_array(&group.delete_timers)
+}
+
+
 draw_system_group :: proc(group: ^SystemGroup) {
     for &system in group.systems {
         draw_system(&system)

@@ -5,7 +5,7 @@ import rl "vendor:raylib"
 TUTORIAL_DATA := []struct{rect: rl.Rectangle, content: cstring} {
     {{450, 50, 300, 175}, "Evil cats are invading and it's up to you to defend your homeland (the yard)!"},
     {{450, 550, 300, 175}, "Aim with your mouse, then press [LEFT CLICK] or [SHIFT] to fire."},
-    {{200, 575, 300, 160}, "<--- Click this button to buy more weapons."},
+    {{200, 575, 300, 160}, "<--- Click this button to buy a random weapon."},
     {{700, 100, 300, 160}, "You can purchase weapon upgrades over here."},
     {{500, 50, 200, 140}, "Good Luck!"}
 }

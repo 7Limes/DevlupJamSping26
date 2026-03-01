@@ -97,11 +97,18 @@ WeaponData :: struct {
 create_weapon_data :: proc() -> WeaponData {
     bullets: #soa[dynamic]Bullet
     cannonballs: #soa[dynamic]CannonBall
+    data := WeaponData{}
+    data.bullets = bullets
+    data.cannonballs = cannonballs
+    reset_weapon_data(&data)
+    return data
+}
 
-    return {
-        // .Laser, LASER_BASE_AMMO, 0,
+
+reset_weapon_data :: proc(weapon_data: ^WeaponData) {
+    weapon_data^ = {
         .MachineGun, MG_BASE_AMMO, 0,
-        bullets, cannonballs,
+        weapon_data.bullets, weapon_data.cannonballs,
         MachineGun{MG_BASE_AMMO, MG_BASE_FIRE_INTERVAL, MG_BASE_DAMAGE, false},
         Cannon{CANNON_BASE_SPEED, CANNON_BASE_RADIUS, CANNON_BASE_DAMAGE},
         Shotgun{SHOTGUN_BASE_AMMO, SHOTGUN_BASE_DAMAGE, 3},
@@ -290,6 +297,8 @@ update_cannonballs :: proc(cannonballs: ^#soa[dynamic]CannonBall) {
 
             particle.add_to_system_group(&global_effects, effect)
             particle.add_to_system_group(&global_effects, flare_effect)
+
+            play_random_sound(SOUND_RANDOM_EXPLOSION[:])
 
             unordered_remove_soa(cannonballs, i)
             i -= 1
