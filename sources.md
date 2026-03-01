@@ -1,5 +1,9 @@
 # Sources
 
-- Weapon Models: [text](https://zintoki.itch.io/pixwep)
-- Particles: [text](https://kronbits.itch.io/particle-pack)
-- Background: [text](https://cupnooble.itch.io/sprout-lands-asset-pack)
+- Weapon Models: https://zintoki.itch.io/pixwep
+- Particles: https://kronbits.itch.io/particle-pack
+- Background: https://cupnooble.itch.io/sprout-lands-asset-pack
+- Laser sound: https://lentikula.itch.io/sci-fi-weapon-shots-sfx-freecc0
+- Rifle shoot: https://freesound.org/people/EvanBoyerman/sounds/393671/
+- Shotgun shot: https://freesound.org/people/hyperix6/sounds/660299/
+- Shotgun pump: https://freesound.org/people/awrmacd/sounds/387190/

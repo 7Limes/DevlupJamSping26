@@ -24,7 +24,7 @@ SHOTGUN_SPREAD :: 0.5
 SHOTGUN_BULLET_SPEED :: 7.5
 
 LASER_BASE_AMMO :: 300
-LASER_BASE_DAMAGE :: 0.25
+LASER_BASE_DAMAGE :: 0.1
 LASER_BASE_BEAM_WIDTH :: 50
 
 BULLET_RADIUS :: 5
@@ -69,10 +69,6 @@ Laser :: struct {
     max_ammo: int,
     damage: f32,
     beam_width: f32
-}
-
-Sniper :: struct {
-
 }
 
 WeaponType :: enum {
@@ -149,6 +145,7 @@ shoot_machine_gun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: 
     weapon_data.ammo -= 1
     append_soa(&weapon_data.bullets, bullet)
     create_muzzle_flash_effect(shoot_point, facing_vector)
+    rl.PlaySound(SOUND_ASSAULT_SHOT)
 }
 
 shoot_cannon :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
@@ -171,7 +168,9 @@ shoot_shotgun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.V
             shoot_point, velocity, shotgun.damage, 1
         })
     }
+
     create_muzzle_flash_effect(shoot_point, facing_vector)
+    play_aliased_sound(&SHOTGUN_SOUND_POOL)
 }
 
 shoot_laser :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vector2) {
@@ -186,6 +185,11 @@ shoot_laser :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.Vec
             enemy.health -= laser.damage
         }
     }
+
+    if !rl.IsMusicStreamPlaying(SOUND_LASER_LOOP) {
+        rl.PlayMusicStream(SOUND_LASER_LOOP)
+    }
+    rl.UpdateMusicStream(SOUND_LASER_LOOP)
 }
 
 

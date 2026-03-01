@@ -170,6 +170,9 @@ game_update :: proc(player: ^Player) {
 
     update_player(player)
     update_weapons(&player.weapon_data)
+    if !is_shooting() {
+        rl.StopMusicStream(SOUND_LASER_LOOP)
+    }
     update_enemies(&global_enemies)
 
     update_weapon_conveyor()
@@ -219,7 +222,7 @@ init_game :: proc(player: ^Player) {
     clear_soa_dynamic_array(&global_enemies)
     clear_dynamic_array(&conveyor_contents)
 
-    global_money = 0
+    global_money = 10000
     global_health = PLAYER_MAX_HEALTH
     
 
