@@ -154,7 +154,7 @@ toggle_debug :: proc() {
     }
 }
 
-cheats_tick :: proc() {
+cheats_tick :: proc(weapon_data: ^WeaponData) {
     if !global_debug_enabled {
         return
     }
@@ -171,6 +171,10 @@ cheats_tick :: proc() {
         }
         else if rl.IsKeyPressed(.N) {
             next_wave(&global_wave_data)
+            global_listening_for_cheat = false
+        }
+        else if rl.IsKeyPressed(.R) {
+            change_weapon(weapon_data, weapon_data.current)
             global_listening_for_cheat = false
         }
     }
@@ -242,7 +246,7 @@ game_update :: proc(player: ^Player) {
             draw_formatted_label("Bullets: %d", 0, 750, 20, rl.BLACK, len(&player.weapon_data.bullets))
             draw_formatted_label("Enemies: %d", 0, 770, 20, rl.BLACK, len(global_enemies))
         }
-        cheats_tick()
+        cheats_tick(&player.weapon_data)
 
         
     rl.EndDrawing()

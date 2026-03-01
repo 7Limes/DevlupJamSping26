@@ -3,6 +3,8 @@ package game
 import "core:math"
 import "core:math/rand"
 import rl "vendor:raylib"
+import "../particle"
+import "core:fmt"
 
 EnemyType :: enum {
     Normal,
@@ -49,6 +51,7 @@ update_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
         enemy := &enemies[i]
         
         if enemy.health <= 0 {
+            create_enemy_death_effect(enemy.position, enemy.radius)
             global_money += ENEMY_MONEY_MAP[enemy.type]
             unordered_remove_soa(enemies, i)
             i -= 1
@@ -111,4 +114,24 @@ draw_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
             rl.DrawRectangleLinesEx(rl.Rectangle{healthbar_pos.x-1, healthbar_pos.y-1, ENEMY_HEALTHBAR_WIDTH+2, ENEMY_HEALTHBAR_HEIGHT+2}, 2, rl.BLACK)
         }
     }
+}
+
+create_enemy_death_effect :: proc(position: rl.Vector2, radius: f32) {
+    effect := particle.create_system()
+    effect.position = position
+    effect.particle_sprite = TEX_SMOKE_PARTICLE
+    effect.emission_strength = 0.1 * radius
+    effect.emission_strength_var = 5
+    effect.emission_angle_var = 2 * math.PI
+    effect.drag = 0.5
+    effect.start_color = rl.ColorAlpha(rl.WHITE, 0.8)
+    effect.end_color = rl.ColorAlpha(rl.WHITE, 0.0)
+    effect.random_start_angle = true
+    effect.duration = 80
+    effect.duration_var = 15
+    effect.angular_velocity_var = 3
+    effect.start_size = 0.1
+    effect.end_size = 0.0
+    particle.populate_system(&effect, int(0.2 * radius))
+    particle.add_to_system_group(&global_effects, effect)
 }

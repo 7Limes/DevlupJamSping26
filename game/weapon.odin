@@ -145,6 +145,7 @@ shoot_machine_gun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: 
     weapon_data.ammo -= 1
     append_soa(&weapon_data.bullets, bullet)
     create_muzzle_flash_effect(shoot_point, facing_vector)
+    create_shell_effect(shoot_point, facing_vector, TEX_ICON_BULLET)
     rl.PlaySound(SOUND_ASSAULT_SHOT)
 }
 
@@ -170,6 +171,7 @@ shoot_shotgun :: proc(weapon_data: ^WeaponData, shoot_point, facing_vector: rl.V
     }
 
     create_muzzle_flash_effect(shoot_point, facing_vector)
+    create_shell_effect(shoot_point, facing_vector, TEX_SHOTGUN_SHELL_PARTICLE)
     play_aliased_sound(&SHOTGUN_SOUND_POOL)
 }
 
@@ -205,7 +207,27 @@ create_muzzle_flash_effect :: proc(shoot_point, facing_vector: rl.Vector2) {
     effect.end_size = 0.15
     particle.populate_system(&effect, 1)
     particle.add_to_system_group(&global_effects, effect)
-} 
+}
+
+
+create_shell_effect :: proc(shoot_point, facing_vector: rl.Vector2, texture: rl.Texture2D) {
+    effect := particle.create_system()
+    effect.position = shoot_point + facing_vector * 10
+    effect.particle_sprite = texture
+    effect.emission_strength = 7
+    effect.emission_strength_var = 2
+    effect.emission_angle_var = 2 * math.PI
+    effect.drag = 0.5
+    effect.random_start_angle = true
+    effect.angular_velocity_var = 5
+    effect.start_color = rl.WHITE
+    effect.end_color = rl.ColorAlpha(rl.WHITE, 0)
+    effect.duration = 120
+    effect.start_size = 1.0
+    effect.end_size = 1.0
+    particle.populate_system(&effect, 1)
+    particle.add_to_system_group(&global_effects, effect)
+}
 
 
 update_weapons :: proc(weapon_data: ^WeaponData) {

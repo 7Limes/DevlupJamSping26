@@ -9,6 +9,8 @@ TEX_MUZZLE_FLASH_PARTICLE: rl.Texture2D
 TEX_LASER_FLASH_PARTICLE: rl.Texture2D
 TEX_SHIELD_PARTICLE: rl.Texture2D
 TEX_IMPACT_PARTICLE: rl.Texture2D
+TEX_SHOTGUN_SHELL_PARTICLE: rl.Texture2D
+TEX_SMOKE_PARTICLE: rl.Texture2D
 
 TEX_WEAPON_MG: rl.Texture2D
 TEX_WEAPON_CANNON: rl.Texture2D
@@ -40,6 +42,8 @@ load_textures :: proc() {
     TEX_LASER_FLASH_PARTICLE = rl.LoadTexture("assets/particle/laser-flash.png")
     TEX_SHIELD_PARTICLE = rl.LoadTexture("assets/particle/shield.png")
     TEX_IMPACT_PARTICLE = rl.LoadTexture("assets/particle/impact.png")
+    TEX_SHOTGUN_SHELL_PARTICLE = rl.LoadTexture("assets/particle/shotgun-shell.png")
+    TEX_SMOKE_PARTICLE = rl.LoadTexture("assets/particle/smoke.png")
 
     TEX_WEAPON_MG = rl.LoadTexture("assets/weapon/machine_gun.png")
     TEX_WEAPON_CANNON = rl.LoadTexture("assets/weapon/cannon.png")

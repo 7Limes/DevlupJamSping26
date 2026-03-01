@@ -78,8 +78,6 @@ next_wave :: proc(wave_data: ^WaveData) {
     wave_data.huge_time = 0
     get_wave_enemies(wave_data)
     global_wave_anim = WAVE_ANIM_TABLE[rand.int_max(len(WAVE_ANIM_TABLE))]
-
-    fmt.println("starting wave", wave_data.wave_number)
 }
 
 wave_update_ongoing :: proc(wave_data: ^WaveData, delta: f32) {
@@ -122,7 +120,6 @@ wave_update_ongoing :: proc(wave_data: ^WaveData, delta: f32) {
     }
 
     if wave_data.wave_timer >= WAVE_DURATION && len(global_enemies) == 0 {
-        fmt.println("wave finished")
         wave_data.state = .Idle
         wave_data.wave_timer = 0
         global_money += get_money_bonus(wave_data.wave_number)

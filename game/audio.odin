@@ -32,12 +32,6 @@ create_alias_pool :: proc(source: ^rl.Sound) -> AliasPool {
     return pool
 }
 
-unload_alias_pool :: proc(pool: ^AliasPool) {
-    for sound in pool.sounds {
-        rl.UnloadSoundAlias(sound)
-    }
-}
-
 
 play_aliased_sound :: proc(pool: ^AliasPool) {
     rl.PlaySound(pool.sounds[pool.index])
@@ -52,12 +46,11 @@ load_audio :: proc() {
     SOUND_RANDOM_EXPLOSION[2] = rl.LoadSound("audio/explosion/explosion3.ogg")
     SOUND_RANDOM_EXPLOSION[3] = rl.LoadSound("audio/explosion/explosion4.ogg")
 
-    SOUND_ASSAULT_SHOT = rl.LoadSound("audio/shot/assault-shot-last.ogg")
-
     SOUND_ERROR = rl.LoadSound("audio/ui/error.ogg")
     SOUND_UPGRADE = rl.LoadSound("audio/ui/upgrade.ogg")
     SOUND_BUY = rl.LoadSound("audio/ui/buy.ogg")
-
+    
+    SOUND_ASSAULT_SHOT = rl.LoadSound("audio/shot/assault-shot-last.ogg")
     SOUND_SHOTGUN_SHOT = rl.LoadSound("audio/shot/shotgun-shot.ogg")
     SHOTGUN_SOUND_POOL = create_alias_pool(&SOUND_SHOTGUN_SHOT)
 
