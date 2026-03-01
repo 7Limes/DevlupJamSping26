@@ -8,7 +8,7 @@ import "../particle"
 MG_BASE_AMMO :: 100
 MG_BASE_FIRE_INTERVAL :: 10
 MG_BASE_DAMAGE :: 1
-MG_BULLET_SPEED :: 5.0
+MG_BULLET_SPEED :: 10.0
 
 CANNON_BASE_SPEED :: 4.0
 CANNON_BASE_RADIUS :: 60
@@ -345,4 +345,16 @@ draw_laser :: proc(player: ^Player) {
     dest := rl.Rectangle{CENTER.x, CENTER.y, source.width*40, beam_width}
     origin := rl.Vector2{source.width-150, source.height+beam_width/2-7} / 2 * 1.5
     rl.DrawTexturePro(TEX_LASER_BEAM, source, dest, origin, facing_angle, rl.WHITE)
+
+    effect := particle.create_system()
+    effect.position = CENTER + player.facing_vector * 125
+    effect.particle_sprite = TEX_LASER_FLASH_PARTICLE
+    effect.angle = math.atan2_f32(player.facing_vector.y, player.facing_vector.x) * math.DEG_PER_RAD + 90
+    effect.start_color = rl.Color{255, 255, 255, 220}
+    effect.end_color = rl.Color{255, 255, 255, 0}
+    effect.duration = 5
+    effect.start_size = 0.15
+    effect.end_size = 0.15
+    particle.populate_system(&effect, 1)
+    particle.add_to_system_group(&global_effects, effect)
 }

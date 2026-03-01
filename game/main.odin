@@ -140,6 +140,8 @@ main :: proc() {
 
     create_player_shield()
 
+    change_weapon(&player.weapon_data, .MachineGun)
+
 
     next_enemy_timer := 90
 
@@ -148,16 +150,21 @@ main :: proc() {
         update_weapons(&player.weapon_data)
         update_enemies(&global_enemies)
 
-        update_weapon_conveyor(rl.GetFrameTime())
+        update_weapon_conveyor()
 
         next_enemy_timer -= 1;
         if next_enemy_timer <= 0 {
-            create_enemy(&global_enemies)
+            if rand.int_range(0, 2) == 0 {
+                create_normal_enemy(&global_enemies)
+            }
+            else {
+                create_big_enemy(&global_enemies)
+            }
             next_enemy_timer = rand.int_range(50, 120);
         }
 
         rl.BeginDrawing()
-            rl.ClearBackground(rl.LIGHTGRAY)
+            rl.DrawTextureEx(TEX_BACKGROUND, {200, 0}, 0, 2.0, rl.WHITE)
             
             draw_player(&player)
             draw_enemies(&global_enemies)
@@ -171,6 +178,8 @@ main :: proc() {
 
             draw_ammo_label(&player)
             draw_money_label()
+
+            show_tutorial()
 
             rl.GuiPanel({0, 700, 200, 100}, "debug")
             draw_formatted_label("FPS: %d", 0, 730, 20, rl.BLACK, rl.GetFPS())

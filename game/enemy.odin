@@ -14,15 +14,23 @@ Enemy :: struct {
     type: EnemyType,
     position: rl.Vector2,
     radius: f32,
-    health: f32,
+    max_health, health: f32,
     speed: f32,
-    slowdown_timer: int
+    slowdown_timer: int,
+    sprite: rl.Texture2D
 }
 
 
-ENEMY_SPEED :: 0.5
+NORMAL_ENEMY_RADIUS :: 10
+NORMAL_ENEMY_SPEED :: 0.5
+NORMAL_ENEMY_HEALTH :: 5
+
+BIG_ENEMY_RADIUS :: 20
+BIG_ENEMY_SPEED :: 0.3
+BIG_ENEMY_HEALTH :: 10
+
 ENEMY_SLOWDOWN_TIME :: 15
-ENEMY_MAX_HEALTH :: 10
+
 ENEMY_COLOR :: rl.Color{220, 50, 50, 255}
 ENEMY_OUTLINE_COLOR :: rl.Color{170, 30, 30, 255}
 ENEMY_HEALTHBAR_WIDTH :: 50
@@ -53,23 +61,32 @@ update_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
 }
 
 
-create_enemy :: proc(enemies: ^#soa[dynamic]Enemy) {
+get_enemy_spawn_point :: proc() -> rl.Vector2 {
     angle := rand.float32_range(0, 2 * math.PI)
-    enemy_pos := rl.Vector2Rotate(rl.Vector2{0, -1}, angle) * (FIELD_RECT.width / 2 * 1.41) + CENTER
-    enemy_speed := rand.float32_range(ENEMY_SPEED-0.5, ENEMY_SPEED+0.5)
-    enemy := Enemy{.Normal, enemy_pos, 10, ENEMY_MAX_HEALTH, enemy_speed, 0}
+    return rl.Vector2Rotate(rl.Vector2{0, -1}, angle) * (FIELD_RECT.width / 2 * 1.41) + CENTER
+}
+
+
+create_normal_enemy :: proc(enemies: ^#soa[dynamic]Enemy) {
+    enemy_pos := get_enemy_spawn_point()
+    enemy := Enemy{.Normal, enemy_pos, NORMAL_ENEMY_RADIUS, NORMAL_ENEMY_HEALTH, NORMAL_ENEMY_HEALTH, NORMAL_ENEMY_SPEED, 0, TEX_NORMAL_ENEMY}
+    append(enemies, enemy)
+}
+
+create_big_enemy :: proc(enemies: ^#soa[dynamic]Enemy) {
+    enemy_pos := get_enemy_spawn_point()
+    enemy := Enemy{.Big, enemy_pos, BIG_ENEMY_RADIUS, BIG_ENEMY_HEALTH, BIG_ENEMY_HEALTH, BIG_ENEMY_SPEED, 0, TEX_BIG_ENEMY}
     append(enemies, enemy)
 }
 
 
 draw_enemies :: proc(enemies: ^#soa[dynamic]Enemy) {
     for enemy in enemies {
-        rl.DrawCircle(i32(enemy.position.x), i32(enemy.position.y), enemy.radius+4, ENEMY_OUTLINE_COLOR)
-        rl.DrawCircle(i32(enemy.position.x), i32(enemy.position.y), enemy.radius, ENEMY_COLOR)
+        rl.DrawTextureEx(enemy.sprite, enemy.position-{enemy.radius, enemy.radius}, 0, enemy.radius*2/f32(enemy.sprite.width), rl.WHITE)
 
         // Draw healthbar
         healthbar_pos := rl.Vector2{enemy.position.x-ENEMY_HEALTHBAR_WIDTH/2, enemy.position.y-enemy.radius-15}
-        health_t := f32(enemy.health) / ENEMY_MAX_HEALTH
+        health_t := f32(enemy.health) / enemy.max_health
         filled_health_width := health_t * ENEMY_HEALTHBAR_WIDTH
         filled_health_color := rl.ColorLerp(LOW_HEALTH_COLOR, HIGH_HEALTH_COLOR, health_t)
         rl.DrawRectangle(i32(healthbar_pos.x), i32(healthbar_pos.y), ENEMY_HEALTHBAR_WIDTH, ENEMY_HEALTHBAR_HEIGHT, rl.Color{50, 50, 50, 128})

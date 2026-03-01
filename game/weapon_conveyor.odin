@@ -6,6 +6,8 @@ import "core:fmt"
 import "core:math/rand"
 
 
+WEAPON_PRICE :: 50
+
 PANEL_WIDTH :: 200
 PANEL_HEIGHT :: 800
 
@@ -17,21 +19,18 @@ BOX_SPEED :: 1.0
 
 WEAPON_ICON_SCALE :: 1.5
 
-GENERATE_INTERVAL :: 10.0
-
 WeaponBox :: struct {
     rect: rl.Rectangle,
     weapon: WeaponType
 }
 
 conveyor_contents: [dynamic]WeaponBox
-generate_timer: f32 = 0.0
 max_conveyor_boxes := 3
 conveyor_sprite_positions: [6]rl.Vector2
 conveyor_sprites_initialized := false
 
 
-update_weapon_conveyor :: proc(delta: f32) {
+update_weapon_conveyor :: proc() {
     if !conveyor_sprites_initialized {
         // Initialize
         for i in 0..<cap(conveyor_sprite_positions) {
@@ -45,14 +44,6 @@ update_weapon_conveyor :: proc(delta: f32) {
         pos.y += 1
         if pos.y > CONVEYOR_BOTTOM {
             pos.y = CONVEYOR_RECT.y-100
-        }
-    }
-
-    generate_timer -= delta
-    if generate_timer < 0 {
-        generate_timer = GENERATE_INTERVAL
-        if len(conveyor_contents) < max_conveyor_boxes {
-            add_weapon_box()
         }
     }
 
@@ -103,4 +94,16 @@ show_weapon_conveyor_ui :: proc(weapon_data: ^WeaponData) {
     rl.DrawRectangle(i32(CONVEYOR_RECT.x), i32(CONVEYOR_RECT.y-100), 100, 100, bg_color)
     rl.DrawRectangle(i32(CONVEYOR_RECT.x), i32(CONVEYOR_BOTTOM), 100, 100, bg_color)
     rl.DrawRectangleLinesEx(CONVEYOR_RECT, 3, rl.BLACK)
+
+    saved_text_size := rl.GuiGetStyle(.DEFAULT, 16)
+    rl.GuiSetStyle(.DEFAULT, 16, 19)
+
+    if rl.GuiButton({25, 575, 150, 70}, "Buy Weapon ($50)") {
+        if global_money >= WEAPON_PRICE && len(conveyor_contents) < max_conveyor_boxes {
+            global_money -= WEAPON_PRICE
+            add_weapon_box()
+        }
+    }
+
+    rl.GuiSetStyle(.DEFAULT, 16, saved_text_size)
 }
