@@ -5,8 +5,7 @@ import "core:math"
 import "core:fmt"
 import "core:math/rand"
 
-
-WEAPON_PRICE :: 50
+WEAPON_PRICE :: 25
 
 PANEL_WIDTH :: 200
 PANEL_HEIGHT :: 800
@@ -19,6 +18,8 @@ BOX_SPEED :: 1.0
 
 WEAPON_ICON_SCALE :: 1.5
 
+BOX_SPAWN_INTERVAL :: 20
+
 WeaponBox :: struct {
     rect: rl.Rectangle,
     weapon: WeaponType
@@ -28,9 +29,10 @@ conveyor_contents: [dynamic]WeaponBox
 max_conveyor_boxes := 3
 conveyor_sprite_positions: [6]rl.Vector2
 conveyor_sprites_initialized := false
+global_box_spawn_timer: f32 = 0
 
 
-update_weapon_conveyor :: proc() {
+update_weapon_conveyor :: proc(delta: f32) {
     if !conveyor_sprites_initialized {
         // Initialize
         for i in 0..<cap(conveyor_sprite_positions) {
@@ -38,6 +40,14 @@ update_weapon_conveyor :: proc() {
             conveyor_sprite_positions[i] = pos
         }
         conveyor_sprites_initialized = true
+    }
+
+    if global_money < 50 {
+        global_box_spawn_timer += delta
+        if global_box_spawn_timer >= BOX_SPAWN_INTERVAL {
+            global_box_spawn_timer = 0
+            add_weapon_box()
+        }
     }
 
     for &pos in conveyor_sprite_positions {
@@ -98,7 +108,7 @@ show_weapon_conveyor_ui :: proc(weapon_data: ^WeaponData) {
     saved_text_size := rl.GuiGetStyle(.DEFAULT, 16)
     rl.GuiSetStyle(.DEFAULT, 16, 19)
 
-    if rl.GuiButton({25, 575, 150, 70}, "Buy Weapon ($50)") {
+    if rl.GuiButton({25, 575, 150, 70}, "Buy Weapon ($25)") {
         if global_money >= WEAPON_PRICE && len(conveyor_contents) < max_conveyor_boxes {
             global_money -= WEAPON_PRICE
             add_weapon_box()

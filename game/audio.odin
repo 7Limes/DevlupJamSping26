@@ -38,21 +38,32 @@ play_aliased_sound :: proc(pool: ^AliasPool) {
     pool.index = (pool.index + 1) % len(pool.sounds)
 }
 
+load_sound :: proc(sound_path: string) -> rl.Sound {
+    path := format_as_cstring("%s%s", rl.GetApplicationDirectory(), sound_path)
+    return rl.LoadSound(path)
+}
+
+load_music :: proc(music_path: string) -> rl.Music {
+    path := format_as_cstring("%s%s", rl.GetApplicationDirectory(), music_path)
+    return rl.LoadMusicStream(path)
+}
+
 
 load_audio :: proc() {
     rl.InitAudioDevice()
-    SOUND_RANDOM_EXPLOSION[0] = rl.LoadSound("audio/explosion/explosion1.ogg")
-    SOUND_RANDOM_EXPLOSION[1] = rl.LoadSound("audio/explosion/explosion2.ogg")
-    SOUND_RANDOM_EXPLOSION[2] = rl.LoadSound("audio/explosion/explosion3.ogg")
-    SOUND_RANDOM_EXPLOSION[3] = rl.LoadSound("audio/explosion/explosion4.ogg")
-
-    SOUND_ERROR = rl.LoadSound("audio/ui/error.ogg")
-    SOUND_UPGRADE = rl.LoadSound("audio/ui/upgrade.ogg")
-    SOUND_BUY = rl.LoadSound("audio/ui/buy.ogg")
     
-    SOUND_ASSAULT_SHOT = rl.LoadSound("audio/shot/assault-shot-last.ogg")
-    SOUND_SHOTGUN_SHOT = rl.LoadSound("audio/shot/shotgun-shot.ogg")
+    SOUND_RANDOM_EXPLOSION[0] = load_sound("assets/audio/explosion/explosion1.ogg")
+    SOUND_RANDOM_EXPLOSION[1] = load_sound("assets/audio/explosion/explosion2.ogg")
+    SOUND_RANDOM_EXPLOSION[2] = load_sound("assets/audio/explosion/explosion3.ogg")
+    SOUND_RANDOM_EXPLOSION[3] = load_sound("assets/audio/explosion/explosion4.ogg")
+
+    SOUND_ERROR = load_sound("assets/audio/ui/error.ogg")
+    SOUND_UPGRADE = load_sound("assets/audio/ui/upgrade.ogg")
+    SOUND_BUY = load_sound("assets/audio/ui/buy.ogg")
+    
+    SOUND_ASSAULT_SHOT = load_sound("assets/audio/shot/assault-shot-last.ogg")
+    SOUND_SHOTGUN_SHOT = load_sound("assets/audio/shot/shotgun-shot.ogg")
     SHOTGUN_SOUND_POOL = create_alias_pool(&SOUND_SHOTGUN_SHOT)
 
-    SOUND_LASER_LOOP = rl.LoadMusicStream("audio/laser/beam-loop.ogg")
+    SOUND_LASER_LOOP = load_music("assets/audio/laser/beam-loop.ogg")
 }

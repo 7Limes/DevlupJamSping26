@@ -1,6 +1,7 @@
 package game
 
 import rl "vendor:raylib"
+import "base:runtime"
 
 TUTORIAL_DATA := []struct{rect: rl.Rectangle, content: cstring} {
     {{450, 50, 300, 175}, "Evil cats are invading and it's up to you to defend your homeland (the yard)!"},
@@ -27,9 +28,15 @@ show_tutorial :: proc() {
     }
 
     saved_text_size := rl.GuiGetStyle(.DEFAULT, 16)
+    saved_line_spacing := rl.GuiGetStyle(.DEFAULT, 20)
     rl.GuiSetStyle(.DEFAULT, 16, 25)
     rl.GuiSetStyle(.DEFAULT, 21, i32(rl.GuiTextAlignmentVertical.TEXT_ALIGN_TOP))
     rl.GuiSetStyle(.DEFAULT, 22, i32(rl.GuiTextWrapMode.TEXT_WRAP_WORD))
+
+    when ODIN_OS == .Windows {
+        // Fix weird line spacing bug
+        rl.GuiSetStyle(.DEFAULT, 20, 0)
+    }
 
     rl.GuiTextBox({data.rect.x, data.rect.y+23, data.rect.width, data.rect.height-23}, data.content, 20, false)
 
@@ -42,4 +49,5 @@ show_tutorial :: proc() {
     }
 
     rl.GuiSetStyle(.DEFAULT, 16, saved_text_size)
+    rl.GuiSetStyle(.DEFAULT, 20, saved_line_spacing)
 }

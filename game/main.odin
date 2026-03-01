@@ -6,6 +6,7 @@ import "core:math"
 import "core:strings"
 import rl "vendor:raylib"
 import "../particle"
+import "core:mem"
 
 WIN_WIDTH :: 1200
 WIN_HEIGHT :: 800
@@ -16,7 +17,6 @@ FIELD_RECT :: rl.Rectangle{200, 0, 800, 800}
 
 PLAYER_RADIUS :: 30
 PLAYER_MAX_HEALTH :: 100
-PLAYER_TURN_SPEED :: 0.08
 PLAYER_SHOOT_DISTANCE :: 100
 SHOOT_SPEED :: 5.0
 PLAYER_COLOR :: rl.Color{50, 50, 220, 255}
@@ -57,10 +57,13 @@ global_health: f32 = PLAYER_MAX_HEALTH
 
 global_wave_data: WaveData
 
+global_dog_sprite := TEX_DOG_SUSPICIOUS
+
 global_state := GameState.Title
 
 global_debug_enabled := false
 global_listening_for_cheat := false
+
 
 
 is_shooting :: proc() -> bool {
@@ -84,11 +87,12 @@ update_player :: proc(player: ^Player) {
 
 // Drawing procedures
 draw_player :: proc(player: ^Player) {
-    rl.DrawCircle(i32(CENTER.x), i32(CENTER.y), PLAYER_RADIUS+5, PLAYER_OUTLINE_COLOR)
-    rl.DrawCircle(i32(CENTER.x), i32(CENTER.y), PLAYER_RADIUS, PLAYER_COLOR)
+    rl.DrawTextureEx(global_dog_sprite, CENTER-{45,50}, 0, 0.2, rl.WHITE)
+    // rl.DrawCircle(i32(CENTER.x), i32(CENTER.y), PLAYER_RADIUS+5, PLAYER_OUTLINE_COLOR)
+    // rl.DrawCircle(i32(CENTER.x), i32(CENTER.y), PLAYER_RADIUS, PLAYER_COLOR)
 
-    weapon_tex := WEAPON_TEXTURES[player.weapon_data.current]
     facing_angle := math.atan2_f32(player.facing_vector.y, player.facing_vector.x) * math.DEG_PER_RAD
+    weapon_tex := WEAPON_TEXTURES[player.weapon_data.current]
     source := rl.Rectangle{0, 0, f32(weapon_tex.width), f32(weapon_tex.height)};
     dest := rl.Rectangle{CENTER.x, CENTER.y, source.width*1.5, source.height*1.5}
     origin := rl.Vector2{source.width-75, source.height-5} / 2 * 1.5
@@ -109,7 +113,7 @@ draw_health_label :: proc() {
 draw_money_label :: proc() {
     rl.DrawTextureEx(TEX_ICON_MONEY, {1000, 30}, 0, 3.0, rl.WHITE)
     money_string := format_with_commas(global_money)
-    rl.DrawText(strings.clone_to_cstring(money_string), 1050, 45, 30, rl.BLACK)
+    rl.DrawText(strings.clone_to_cstring(money_string, context.temp_allocator), 1050, 45, 30, rl.BLACK)
 }
 
 
@@ -190,11 +194,19 @@ draw_formatted_label :: proc(fstring: string, x, y, font_size: i32, color: rl.Co
 
 title_update :: proc(player: ^Player) {
     rl.BeginDrawing()
+    rl.DrawTextureEx(TEX_TITLE_BACKGROUND, {0, 0}, 0, 6, rl.WHITE)
 
+    logo_y := f32(math.sin(rl.GetTime() * 1.5) * 15)
+    rl.DrawTextureEx(TEX_LOGO, {350, 50+logo_y}, 0, 1, rl.WHITE)
+
+    saved_text_size := rl.GuiGetStyle(.DEFAULT, 16)
+    rl.GuiSetStyle(.DEFAULT, 16, 40)
     if rl.GuiButton({500, 500, 200, 100}, "Begin") {
         init_game(player)
         global_state = .Game
     }
+
+    rl.GuiSetStyle(.DEFAULT, 16, saved_text_size)
 
     rl.EndDrawing()
 }
@@ -216,7 +228,7 @@ game_update :: proc(player: ^Player) {
 
     wave_update(&global_wave_data, delta)
 
-    update_weapon_conveyor()
+    update_weapon_conveyor(delta)
 
     rl.BeginDrawing()
         rl.DrawTextureEx(TEX_BACKGROUND, {200, 0}, 0, 2.0, rl.WHITE)
@@ -262,12 +274,35 @@ init_game :: proc(player: ^Player) {
     global_money = 0
     global_health = PLAYER_MAX_HEALTH
     init_wave_data(&global_wave_data)
+    global_dog_sprite = TEX_DOG_SUSPICIOUS
+    global_box_spawn_timer = 0
 
     create_player_shield()
     change_weapon(&player.weapon_data, .MachineGun)
 }
 
+load_style :: proc(style_path: string) {
+    path := format_as_cstring("%s%s", rl.GetApplicationDirectory(), style_path)
+    rl.GuiLoadStyle(path)
+}
+
 main :: proc() {
+    when ODIN_DEBUG {
+		track: mem.Tracking_Allocator
+		mem.tracking_allocator_init(&track, context.allocator)
+		context.allocator = mem.tracking_allocator(&track)
+
+		defer {
+			if len(track.allocation_map) > 0 {
+				fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+				for _, entry in track.allocation_map {
+					fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+				}
+			}
+			mem.tracking_allocator_destroy(&track)
+		}
+	}
+
     WEAPON_TOOLTIPS[.MachineGun] = {"Machine Gun", "Rapidly fires bullets"}
     WEAPON_TOOLTIPS[.Cannon] = {"Cannon", "Fires an explosive projectile"}
     WEAPON_TOOLTIPS[.Shotgun] = {"Shotgun", "Fires a spread of multiple bullets"}
@@ -288,7 +323,7 @@ main :: proc() {
     rl.InitWindow(WIN_WIDTH, WIN_HEIGHT, "C.H.A.D")
     rl.SetTargetFPS(60)
     rl.SetExitKey(.KEY_NULL)
-    rl.GuiLoadStyle("assets/style/style_candy.rgs")
+    load_style("assets/style/style_candy.rgs")
 
     load_textures()
     load_audio()
@@ -303,6 +338,8 @@ main :: proc() {
             case .Dead:
 
         }
+
+        free_all(context.temp_allocator)
     }
 
     rl.CloseWindow()

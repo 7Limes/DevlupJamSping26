@@ -31,7 +31,7 @@ point_to_segment_distance_sq :: proc(p, a, b: rl.Vector2) -> f32 {
 }
 
 
-format_with_commas :: proc(n: int, allocator := context.allocator) -> string {
+format_with_commas :: proc(n: int, allocator := context.temp_allocator) -> string {
     // Handle negative numbers
     negative := n < 0
     value := n if n >= 0 else -n
@@ -59,11 +59,11 @@ format_with_commas :: proc(n: int, allocator := context.allocator) -> string {
 }
 
 
-format_as_cstring :: proc(fstring: string, args: ..any) -> cstring {
+format_as_cstring :: proc(fstring: string, args: ..any, allocator := context.temp_allocator) -> cstring {
     builder := strings.builder_make()
     defer strings.builder_destroy(&builder)
     formatted_string := fmt.sbprintf(&builder, fstring, ..args)
-    return strings.clone_to_cstring(formatted_string)
+    return strings.clone_to_cstring(formatted_string, allocator)
 }
 
 

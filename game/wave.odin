@@ -58,7 +58,7 @@ get_wave_enemies :: proc(wave_data: ^WaveData) {
 
 
 get_money_bonus :: proc(wave_number: int) -> int {
-    return int(100 * math.pow_f32(f32(wave_number), 0.2))
+    return int(50 * math.pow_f32(f32(wave_number), 0.2))
 }
 
 
